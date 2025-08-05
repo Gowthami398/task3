@@ -1,0 +1,309 @@
+import tkinter as tk
+from tkinter import messagebox, ttk
+import random
+import string
+import pyperclip
+
+class PasswordGeneratorApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Password Generator - My Daily Work")
+        self.root.geometry("500x700")
+        self.root.configure(bg='#2c3e50')
+        self.root.resizable(False, False)
+        
+        self.create_widgets()
+        
+    def create_widgets(self):
+        # Title
+        title_label = tk.Label(self.root, text="My Daily Work Password Generator", 
+                             font=("Arial", 16, "bold"), bg='#2c3e50', fg='white')
+        title_label.pack(pady=20)
+        
+        # Main frame
+        main_frame = tk.Frame(self.root, bg='#34495e', relief='raised', bd=3)
+        main_frame.pack(pady=20, padx=20, fill='both', expand=True)
+        
+        # Password display
+        tk.Label(main_frame, text="Generated Password:", font=("Arial", 12, "bold"), 
+                bg='#34495e', fg='white').pack(pady=(20,5))
+        
+        self.password_var = tk.StringVar(value="Click 'Generate Password' to create a password")
+        self.password_display = tk.Entry(main_frame, textvariable=self.password_var, 
+                                  font=("Arial", 14, "bold"), bg='#2c3e50', fg='white',
+                                  relief='sunken', bd=2, state='normal', width=40)
+        self.password_display.pack(pady=10, padx=20)
+        
+        # Copy button
+        copy_button = tk.Button(main_frame, text="📋 Copy to Clipboard", 
+                               command=self.copy_to_clipboard,
+                               bg='#27ae60', fg='white', font=("Arial", 10, "bold"),
+                               padx=20, pady=5)
+        copy_button.pack(pady=10)
+        
+        # Settings frame
+        settings_frame = tk.Frame(main_frame, bg='#34495e')
+        settings_frame.pack(pady=20, padx=20, fill='x')
+        
+        # Length setting
+        length_frame = tk.Frame(settings_frame, bg='#34495e')
+        length_frame.pack(fill='x', pady=10)
+        
+        tk.Label(length_frame, text="Password Length:", font=("Arial", 12, "bold"), 
+                bg='#34495e', fg='white').pack(anchor='w')
+        
+        length_scale_frame = tk.Frame(length_frame, bg='#34495e')
+        length_scale_frame.pack(fill='x', pady=5)
+        
+        self.length_var = tk.IntVar(value=12)
+        self.length_scale = tk.Scale(length_scale_frame, from_=8, to=50, 
+                                    orient='horizontal', variable=self.length_var,
+                                    bg='#34495e', fg='white', highlightbackground='#34495e',
+                                    font=("Arial", 10))
+        self.length_scale.pack(side='left', fill='x', expand=True)
+        
+        self.length_label = tk.Label(length_scale_frame, textvariable=self.length_var,
+                                   font=("Arial", 12, "bold"), bg='#34495e', fg='white',
+                                   width=3)
+        self.length_label.pack(side='right', padx=10)
+        
+        # Character types frame
+        tk.Label(settings_frame, text="Character Types:", font=("Arial", 12, "bold"), 
+                bg='#34495e', fg='white').pack(anchor='w', pady=(20,5))
+        
+        # Checkboxes
+        self.uppercase_var = tk.BooleanVar(value=True)
+        self.lowercase_var = tk.BooleanVar(value=True)
+        self.numbers_var = tk.BooleanVar(value=True)
+        self.symbols_var = tk.BooleanVar(value=True)
+        
+        checkbox_frame = tk.Frame(settings_frame, bg='#34495e')
+        checkbox_frame.pack(fill='x', pady=5)
+        
+        tk.Checkbutton(checkbox_frame, text="Uppercase Letters (A-Z)", 
+                      variable=self.uppercase_var, bg='#34495e', fg='white',
+                      font=("Arial", 10), selectcolor='#2c3e50').pack(anchor='w', pady=2)
+        
+        tk.Checkbutton(checkbox_frame, text="Lowercase Letters (a-z)", 
+                      variable=self.lowercase_var, bg='#34495e', fg='white',
+                      font=("Arial", 10), selectcolor='#2c3e50').pack(anchor='w', pady=2)
+        
+        tk.Checkbutton(checkbox_frame, text="Numbers (0-9)", 
+                      variable=self.numbers_var, bg='#34495e', fg='white',
+                      font=("Arial", 10), selectcolor='#2c3e50').pack(anchor='w', pady=2)
+        
+        tk.Checkbutton(checkbox_frame, text="Special Symbols (!@#$%^&*)", 
+                      variable=self.symbols_var, bg='#34495e', fg='white',
+                      font=("Arial", 10), selectcolor='#2c3e50').pack(anchor='w', pady=2)
+        
+        # Advanced options
+        advanced_frame = tk.Frame(settings_frame, bg='#34495e')
+        advanced_frame.pack(fill='x', pady=20)
+        
+        tk.Label(advanced_frame, text="Advanced Options:", font=("Arial", 12, "bold"), 
+                bg='#34495e', fg='white').pack(anchor='w', pady=(10,5))
+        
+        self.exclude_similar_var = tk.BooleanVar(value=True)
+        self.exclude_ambiguous_var = tk.BooleanVar(value=False)
+        
+        tk.Checkbutton(advanced_frame, text="Exclude Similar Characters (l, 1, I, 0, O)", 
+                      variable=self.exclude_similar_var, bg='#34495e', fg='white',
+                      font=("Arial", 10), selectcolor='#2c3e50').pack(anchor='w', pady=2)
+        
+        tk.Checkbutton(advanced_frame, text="Exclude Ambiguous Characters ({}, [], (), /, \\, |, `, ~)", 
+                      variable=self.exclude_ambiguous_var, bg='#34495e', fg='white',
+                      font=("Arial", 10), selectcolor='#2c3e50').pack(anchor='w', pady=2)
+        
+        # Generate button
+        generate_button = tk.Button(main_frame, text="🔐 Generate Password", 
+                                   command=self.generate_password,
+                                   bg='#3498db', fg='white', font=("Arial", 14, "bold"),
+                                   padx=30, pady=10)
+        generate_button.pack(pady=20)
+        
+        # Password strength indicator
+        strength_frame = tk.Frame(main_frame, bg='#34495e')
+        strength_frame.pack(pady=10, fill='x', padx=20)
+        
+        tk.Label(strength_frame, text="Password Strength:", font=("Arial", 10, "bold"), 
+                bg='#34495e', fg='white').pack(anchor='w')
+        
+        self.strength_label = tk.Label(strength_frame, text="", font=("Arial", 12, "bold"), 
+                                      bg='#34495e', fg='white')
+        self.strength_label.pack(anchor='w', pady=5)
+        
+        # History frame
+        history_frame = tk.Frame(self.root, bg='#34495e', relief='sunken', bd=2)
+        history_frame.pack(pady=10, padx=20, fill='x')
+        
+        tk.Label(history_frame, text="Generated Passwords History:", font=("Arial", 10, "bold"), 
+                bg='#34495e', fg='white').pack(anchor='w', padx=5, pady=2)
+        
+        self.history_text = tk.Text(history_frame, height=6, font=("Arial", 9),
+                                   bg='#2c3e50', fg='white', relief='flat')
+        self.history_text.pack(fill='x', padx=5, pady=5)
+        
+        # Update length label
+        self.length_var.trace('w', self.update_length_label)
+        
+    def update_length_label(self, *args):
+        self.length_label.config(text=str(self.length_var.get()))
+        
+    def generate_password(self):
+        # Check if at least one character type is selected
+        if not any([self.uppercase_var.get(), self.lowercase_var.get(), 
+                   self.numbers_var.get(), self.symbols_var.get()]):
+            messagebox.showwarning("Warning", "Please select at least one character type!")
+            return
+            
+        length = self.length_var.get()
+        
+        # Build character pool
+        chars = ""
+        if self.uppercase_var.get():
+            chars += string.ascii_uppercase
+        if self.lowercase_var.get():
+            chars += string.ascii_lowercase
+        if self.numbers_var.get():
+            chars += string.digits
+        if self.symbols_var.get():
+            chars += "!@#$%^&*()_+-=[]{}|;:,.<>?"
+            
+        # Apply exclusions
+        if self.exclude_similar_var.get():
+            chars = chars.replace('l', '').replace('1', '').replace('I', '').replace('0', '').replace('O', '')
+            
+        if self.exclude_ambiguous_var.get():
+            chars = chars.replace('{', '').replace('}', '').replace('[', '').replace(']', '')
+            chars = chars.replace('(', '').replace(')', '').replace('/', '').replace('\\', '')
+            chars = chars.replace('|', '').replace('`', '').replace('~', '')
+            
+        if not chars:
+            messagebox.showerror("Error", "No characters available with current settings!")
+            return
+            
+        # Generate password
+        password = ''.join(random.choice(chars) for _ in range(length))
+        
+        # Ensure at least one character from each selected type
+        password = self.ensure_character_types(password, length)
+        
+        # Update the password display
+        self.password_var.set(password)
+        
+        # Force GUI update
+        self.root.update()
+        
+        self.assess_password_strength(password)
+        self.add_to_history(password)
+        
+    def ensure_character_types(self, password, length):
+        """Ensure the password contains at least one character from each selected type"""
+        chars_needed = []
+        if self.uppercase_var.get():
+            chars_needed.append(string.ascii_uppercase)
+        if self.lowercase_var.get():
+            chars_needed.append(string.ascii_lowercase)
+        if self.numbers_var.get():
+            chars_needed.append(string.digits)
+        if self.symbols_var.get():
+            chars_needed.append("!@#$%^&*()_+-=[]{}|;:,.<>?")
+            
+        # Check if password already has all required types
+        has_upper = any(c.isupper() for c in password)
+        has_lower = any(c.islower() for c in password)
+        has_digit = any(c.isdigit() for c in password)
+        has_symbol = any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password)
+        
+        required_types = []
+        if self.uppercase_var.get() and not has_upper:
+            required_types.append(string.ascii_uppercase)
+        if self.lowercase_var.get() and not has_lower:
+            required_types.append(string.ascii_lowercase)
+        if self.numbers_var.get() and not has_digit:
+            required_types.append(string.digits)
+        if self.symbols_var.get() and not has_symbol:
+            required_types.append("!@#$%^&*()_+-=[]{}|;:,.<>?")
+            
+        if required_types:
+            # Replace random characters with required types
+            for char_type in required_types:
+                if len(password) > 0:
+                    pos = random.randint(0, len(password) - 1)
+                    password = password[:pos] + random.choice(char_type) + password[pos+1:]
+                    
+        return password
+        
+    def assess_password_strength(self, password):
+        """Assess and display password strength"""
+        score = 0
+        feedback = []
+        
+        # Length score
+        if len(password) >= 12:
+            score += 2
+            feedback.append("Good length")
+        elif len(password) >= 8:
+            score += 1
+            feedback.append("Acceptable length")
+        else:
+            feedback.append("Too short")
+            
+        # Character variety score
+        if any(c.isupper() for c in password):
+            score += 1
+        if any(c.islower() for c in password):
+            score += 1
+        if any(c.isdigit() for c in password):
+            score += 1
+        if any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
+            score += 1
+            
+        # Strength assessment
+        if score >= 5:
+            strength = "Very Strong"
+            color = "#27ae60"
+        elif score >= 4:
+            strength = "Strong"
+            color = "#2ecc71"
+        elif score >= 3:
+            strength = "Good"
+            color = "#f39c12"
+        elif score >= 2:
+            strength = "Fair"
+            color = "#e67e22"
+        else:
+            strength = "Weak"
+            color = "#e74c3c"
+            
+        self.strength_label.config(text=f"{strength} ({score}/6)", fg=color)
+        
+    def copy_to_clipboard(self):
+        password = self.password_var.get()
+        if password and password != "Click 'Generate Password' to create a password":
+            try:
+                pyperclip.copy(password)
+                messagebox.showinfo("Success", "Password copied to clipboard!")
+            except ImportError:
+                messagebox.showerror("Error", "pyperclip not installed. Please install it with: pip install pyperclip")
+        else:
+            messagebox.showwarning("Warning", "No password to copy!")
+            
+    def add_to_history(self, password):
+        """Add password to history"""
+        self.history_text.insert(tk.END, f"{password}\n")
+        self.history_text.see(tk.END)
+        
+        # Limit history to last 10 passwords
+        lines = self.history_text.get("1.0", tk.END).split('\n')
+        if len(lines) > 11:  # 10 passwords + 1 empty line
+            self.history_text.delete("1.0", tk.END)
+            self.history_text.insert(tk.END, '\n'.join(lines[-11:]))
+
+def main():
+    root = tk.Tk()
+    app = PasswordGeneratorApp(root)
+    root.mainloop()
+
+if __name__ == "__main__":
+    main()
